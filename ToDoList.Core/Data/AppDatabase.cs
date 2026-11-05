@@ -90,5 +90,11 @@ namespace ToDoList.Data
             await _database.CloseAsync();
             _database = null;
         }
+
+        public async Task<SQLiteAsyncConnection> GetConnectionAsync()
+        {
+            await InitializeAsync();
+            return _database!;
+        }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using SQLite;
 using ToDoList.Data;
 using static System.Runtime.InteropServices.Marshalling.IIUnknownCacheStrategy;
-using SQLite;
 using ToDoList.Models;
 
 namespace ToDoList.Tests
