@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="ToDoList.Views.Components.CategoryCardView"
+    x:Name="CategoryRoot">
+    <Border
+        BackgroundColor="{Binding BackgroundColor}"
+        StrokeThickness="1.5"
+        StrokeShape="RoundRectangle 18"
+        Padding="20, 10">
+
+        <Border.Stroke>
+            <SolidColorBrush Color="{Binding BindingContext.Color, Source={x:Reference CategoryRoot}, FallbackValue=Transparent, TargetNullValue=Transparent}"/>
+        </Border.Stroke>
+
+        <HorizontalStackLayout Spacing="6">
+            <Image
+            Source="{Binding IconSource}"
+            WidthRequest="30"
+            HeightRequest="30"
+            VerticalOptions="Center"/>
+
+            <Label
+            Text="{Binding Name}"
+            TextColor="White"
+            FontSize="12"
+            VerticalOptions="Center"/>
+
+        </HorizontalStackLayout>
+
+    </Border>
+</ContentView>
+    
+    

@@ -353,5 +353,33 @@ namespace ToDoList.Tests
         }
 
 
+        [Fact]
+        public async Task AddWithSubtasksAsync_WhenSubtaskInsertFails_ShouldRollback()
+        {
+            
+            var task = new TaskItem
+            {
+                Name = "Тестовая задача",
+                CategoryId = 5,
+                CreatedAt = DateTime.Now,
+                IsCompleted = false
+            };
+
+            var subtasks = new List<Subtask>
+                {
+                    new() { Name = "Первая подзадача" },
+                    new() { Name = null! }
+                };
+
+            
+            await Assert.ThrowsAnyAsync<Exception>(
+                () => _repos.AddWithSubtasksAsync(task, subtasks));
+
+            List<TaskItem> tasks = await _repos.GetAllAsync();
+
+            Assert.Empty(tasks);
+        }
+
+
     }
 }

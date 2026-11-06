@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
-using ToDoList.Data;
 using Microsoft.Maui.Storage;
+using ToDoList.Data;
+using ToDoList.ViewModels;
+using ToDoList.Core.Repositories;
+using ToDoList.Services;
 
 namespace ToDoList
 {
@@ -24,6 +27,12 @@ namespace ToDoList
                 new AppDatabase(
                     Path.Combine(FileSystem.AppDataDirectory, "todolist.db3")
                 ));
+
+            builder.Services.AddTransient<MainViewModel>();
+            builder.Services.AddTransient<MainPage>();
+            builder.Services.AddTransient<TaskRepository>();
+            builder.Services.AddTransient<CategoryRepository>();
+            builder.Services.AddTransient<TaskService>();
 
             return builder.Build();
         }

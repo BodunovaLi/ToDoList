@@ -1,24 +1,24 @@
-﻿namespace ToDoList
+﻿using ToDoList.ViewModels;
+
+namespace ToDoList;
+
+public partial class MainPage : ContentPage
 {
-    public partial class MainPage : ContentPage
+    private readonly MainViewModel _viewModel;
+
+    public MainPage(MainViewModel viewModel)
     {
-        int count = 0;
+        InitializeComponent();
 
-        public MainPage()
-        {
-            InitializeComponent();
-        }
+        _viewModel = viewModel;
+        BindingContext = _viewModel;
+    }
 
-        private void OnCounterClicked(object? sender, EventArgs e)
-        {
-            count++;
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
 
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
-
-            SemanticScreenReader.Announce(CounterBtn.Text);
-        }
+        await _viewModel.LoadCategoriesAsync();
+        await _viewModel.LoadTasksAsync();
     }
 }

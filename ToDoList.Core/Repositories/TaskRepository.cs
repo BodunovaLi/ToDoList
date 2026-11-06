@@ -51,5 +51,21 @@ namespace ToDoList.Core.Repositories
             return await connection.DeleteAsync<TaskItem>(id);
         }
 
+        public async Task AddWithSubtasksAsync(TaskItem task, List<Subtask> subtasks)
+        {
+            SQLiteAsyncConnection connection =
+                await _database.GetConnectionAsync();
+
+            await connection.RunInTransactionAsync(transaction =>
+            {
+                transaction.Insert(task);
+
+                foreach (Subtask subtask in subtasks)
+                {
+                    subtask.TaskId = task.Id;
+                    transaction.Insert(subtask);
+                }
+            });
+        }
     }
 }

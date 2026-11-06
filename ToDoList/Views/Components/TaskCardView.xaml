@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="ToDoList.Views.Components.TaskCardView"
+    x:Name="TaskCardRoot">
+
+    <!-- Основная карточка задачи -->
+    <Border
+        BackgroundColor="#181927"
+        Stroke="#343546"
+        StrokeThickness="1"
+        StrokeShape="RoundRectangle 14"
+        Padding="20,15">
+
+        <Grid
+            ColumnDefinitions="Auto,*,Auto,Auto"
+            ColumnSpacing="16">
+
+            <!-- 1. Кружочек выполнения -->
+            <Border
+                Grid.Column="0"
+                WidthRequest="36"
+                HeightRequest="36"
+                BackgroundColor="Transparent"
+                Stroke="#BFC0CC"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 18"
+                VerticalOptions="Center"/>
+
+            <!-- 2. Название и дата задачи -->
+            <VerticalStackLayout
+                Grid.Column="1"
+                Spacing="4"
+                VerticalOptions="Center">
+
+                <Label
+                    Text="{Binding Name}"
+                    FontSize="22"
+                    FontAttributes="Bold"
+                    TextColor="White"
+                    LineBreakMode="TailTruncation"/>
+
+                <HorizontalStackLayout Spacing="7">
+
+                    <Image
+                        Source="calendar.png"
+                        WidthRequest="17"
+                        HeightRequest="17"
+                        VerticalOptions="Center"/>
+
+                    <Label
+                        Text="{Binding DueDate, StringFormat='{0:dd MMMM yyyy}'}"
+                        FontSize="14"
+                        TextColor="#D0D0DA"
+                        VerticalOptions="Center"/>
+
+                </HorizontalStackLayout>
+
+            </VerticalStackLayout>
+
+            <!-- 3. Категория -->
+            <Border
+                Grid.Column="2"
+                BackgroundColor="{Binding Category.BackgroundColor}"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 25"
+                Padding="15,10"
+                VerticalOptions="Center">
+                <Border.Stroke>
+                    <SolidColorBrush Color="{Binding BindingContext.Category.Color,
+                            Source={x:Reference TaskCardRoot},
+                            FallbackValue=Transparent,
+                            TargetNullValue=Transparent}"/>
+                </Border.Stroke>
+
+                <HorizontalStackLayout Spacing="10">
+
+                    <Image
+                        Source="{Binding Category.IconSource}"
+                        WidthRequest="20"
+                        HeightRequest="20"
+                        VerticalOptions="Center"/>
+
+                    <Label
+                        Text="{Binding Category.Name}"
+                        FontSize="14"
+                        TextColor="White"
+                        VerticalOptions="Center"/>
+
+                </HorizontalStackLayout>
+
+            </Border>
+
+            <!-- 4. Кнопки редактирования и удаления -->
+            <HorizontalStackLayout
+                Grid.Column="3"
+                Spacing="10"
+                VerticalOptions="Center">
+
+                <!-- Редактирование -->
+                <Border
+                    BackgroundColor="#292A3A"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12"
+                    WidthRequest="42"
+                    HeightRequest="42">
+
+                    <Image
+                        Source="edit.png"
+                        WidthRequest="21"
+                        HeightRequest="21"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"/>
+
+                </Border>
+
+                <!-- Удаление -->
+                <Border
+                    BackgroundColor="#292A3A"
+                    StrokeThickness="0"
+                    StrokeShape="RoundRectangle 12"
+                    WidthRequest="42"
+                    HeightRequest="42">
+
+                    <Image
+                        Source="delete.png"
+                        WidthRequest="21"
+                        HeightRequest="21"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center"/>
+
+                </Border>
+
+            </HorizontalStackLayout>
+
+        </Grid>
+
+    </Border>
+
+</ContentView>
