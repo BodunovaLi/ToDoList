@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ToDoList.Views.Components.SubtaskCardView">
+    <Grid Padding="0,10"
+          ColumnDefinitions="*,Auto"
+          ColumnSpacing="10">
+        <Grid ColumnDefinitions="Auto,*"
+              ColumnSpacing="10">
+            <CheckBox
+                IsChecked="{Binding IsCompleted, Mode=TwoWay}"
+                Color="#A48BFF"
+                VerticalOptions="Center"
+                SemanticProperties.Description="Выполнена"/>
+
+            <Label
+                Grid.Column="1"
+                Text="{Binding Name}"
+                TextColor="White"
+                FontSize="16"
+                LineBreakMode="TailTruncation"
+                VerticalOptions="Center"/>
+        </Grid>
+        
+        <!-- 4. Кнопки редактирования и удаления -->
+        <HorizontalStackLayout
+                Grid.Column="1"
+                Spacing="10"
+                VerticalOptions="Center">
+
+            <!-- Редактирование -->
+            <ImageButton
+                    Clicked="OnEditClicked"
+                    Source="edit.png"
+                    BackgroundColor="#292A3A"
+                    BorderWidth="0"
+                    CornerRadius="12"
+                    WidthRequest="42"
+                    HeightRequest="42"
+                    MinimumWidthRequest="0"
+                    MinimumHeightRequest="0"
+                    Padding="10"
+                    Aspect="AspectFit"
+                    SemanticProperties.Description="Редактировать подзадачу"
+                    />
+
+            <!-- Удаление -->
+            <ImageButton
+                    Clicked="OnDeleteClicked"
+                    Source="delete.png"
+                    BackgroundColor="#292A3A"
+                    BorderWidth="0"
+                    CornerRadius="12"
+                    WidthRequest="42"
+                    HeightRequest="42"
+                    MinimumWidthRequest="0"
+                    MinimumHeightRequest="0"
+                    Padding="10"
+                    Aspect="AspectFit"
+                    SemanticProperties.Description="Удалить подзадачу"
+                    />
+
+        </HorizontalStackLayout>
+    </Grid>
+</ContentView>

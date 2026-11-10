@@ -32,7 +32,10 @@ namespace ToDoList
             builder.Services.AddTransient<MainPage>();
             builder.Services.AddTransient<TaskRepository>();
             builder.Services.AddTransient<CategoryRepository>();
+            builder.Services.AddTransient<SubtaskRepository>();
             builder.Services.AddTransient<TaskService>();
+            builder.Services.AddTransient<TaskEditorViewModel>();
+            builder.Services.AddTransient<ToDoList.Views.TaskEditorPage>();
 
             return builder.Build();
         }

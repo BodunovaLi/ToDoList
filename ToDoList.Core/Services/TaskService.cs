@@ -104,7 +104,7 @@ namespace ToDoList.Services
             List<Subtask> subtasks = request.Subtasks.Select(draft => new Subtask
                 {
                     Name = draft.Name.Trim(),
-                    IsCompleted = false
+                    IsCompleted = draft.IsCompleted
                 }).ToList();
 
 
@@ -163,7 +163,26 @@ namespace ToDoList.Services
             task.CategoryId = request.CategoryId;
             task.DueDate = request.DueDate?.Date;
 
-            await _taskRepository.UpdateAsync(task);
+            if (request.Subtasks == null)
+            {
+                await _taskRepository.UpdateAsync(task);
+            }
+            else
+            {
+                if (request.Subtasks.Any(subtask => subtask == null ||
+                    subtask.Id < 0 || string.IsNullOrWhiteSpace(subtask.Name)))
+                {
+                    throw new ArgumentException("Проверьте названия и идентификаторы подзадач.", nameof(request));
+                }
+
+                await _taskRepository.UpdateWithSubtasksAsync(task,
+                    request.Subtasks.Select(subtask => new Subtask
+                    {
+                        Id = subtask.Id,
+                        Name = subtask.Name.Trim(),
+                        IsCompleted = subtask.IsCompleted
+                    }).ToList());
+            }
 
             return task;
         }

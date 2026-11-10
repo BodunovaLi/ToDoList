@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentView
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="ToDoList.Views.Components.ConfirmationDialog"
+    x:Name="DialogRoot"
+    HorizontalOptions="Fill"
+    VerticalOptions="Fill">
+
+    <!-- Затемнение занимает всё доступное пространство. -->
+    <Grid
+        BackgroundColor="#99000000"
+        Padding="24">
+
+        <!-- Окно диалога находится по центру. -->
+        <Border
+            BackgroundColor="#1B1B2A"
+            Stroke="#343546"
+            StrokeThickness="1"
+            StrokeShape="RoundRectangle 16"
+            Padding="24"
+            MaximumWidthRequest="440"
+            HorizontalOptions="Center"
+            VerticalOptions="Center">
+
+            <VerticalStackLayout Spacing="22">
+
+                <Label
+                    Text="{Binding Message,
+                                   Source={x:Reference DialogRoot}}"
+                    FontSize="18"
+                    FontAttributes="Bold"
+                    TextColor="White"
+                    HorizontalTextAlignment="Center"
+                    LineBreakMode="WordWrap"/>
+
+                <Grid
+                    ColumnDefinitions="*,*"
+                    ColumnSpacing="12">
+
+                    <Button
+                        Grid.Column="0"
+                        Text="Отмена"
+                        Command="{Binding CancelCommand,
+                                          Source={x:Reference DialogRoot}}"
+                        BackgroundColor="#2C2C3E"
+                        TextColor="White"
+                        FontSize="14"
+                        CornerRadius="10"
+                        BorderWidth="0"
+                        Padding="12,10"/>
+
+                    <Button
+                        Grid.Column="1"
+                        Text="Да, удалить"
+                        Command="{Binding ConfirmCommand,
+                                          Source={x:Reference DialogRoot}}"
+                        BackgroundColor="#6546DF"
+                        TextColor="White"
+                        FontSize="14"
+                        CornerRadius="10"
+                        BorderWidth="0"
+                        Padding="12,10"/>
+
+                </Grid>
+
+            </VerticalStackLayout>
+
+        </Border>
+
+    </Grid>
+
+</ContentView>

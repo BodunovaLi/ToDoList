@@ -9,6 +9,129 @@ namespace ToDoList.Tests.Services;
 
 public class TaskServiceTests : IAsyncLifetime
 {
+    [Fact]
+    public async Task SetTaskCompletedAsync_ShouldPersistBothStatesAndPreserveTaskDetails()
+    {
+        var task = await _taskService.CreateTaskAsync(new CreateTaskRequest
+        {
+            Name = "Checkbox task",
+            CategoryId = 2,
+            DueDate = DateTime.Today,
+            Subtasks = new() { new() { Name = "Pending subtask" } }
+        });
+
+        foreach (var isCompleted in new[] { true, false })
+        {
+            await _taskService.SetTaskCompletedAsync(task.Id, isCompleted);
+
+            var saved = await _taskService.GetTaskByIdAsync(task.Id);
+            Assert.NotNull(saved);
+            Assert.Equal(isCompleted, saved.IsCompleted);
+            Assert.Equal(task.Name, saved.Name);
+            Assert.Equal(task.CategoryId, saved.CategoryId);
+            Assert.Equal(task.DueDate, saved.DueDate);
+            Assert.Equal(task.CreatedAt, saved.CreatedAt);
+            var subtask = Assert.Single(await _subtaskRepository.GetByTaskIdAsync(task.Id));
+            Assert.False(subtask.IsCompleted);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateTaskAsync_ShouldSynchronizeSubtasksAndKeepTaskIdentity()
+    {
+        var task = await _taskService.CreateTaskAsync(new CreateTaskRequest
+        {
+            Name = "Original", CategoryId = 2,
+            Subtasks = new() { new() { Name = "Keep" }, new() { Name = "Remove" } }
+        });
+        var previous = await _subtaskRepository.GetByTaskIdAsync(task.Id);
+        var keptId = previous.Single(s => s.Name == "Keep").Id;
+        var removedId = previous.Single(s => s.Name == "Remove").Id;
+
+        await _taskService.UpdateTaskAsync(new UpdateTaskRequest
+        {
+            Id = task.Id, Name = "Updated", CategoryId = 3, DueDate = DateTime.Today.AddDays(2),
+            Subtasks = new()
+            {
+                new() { Id = keptId, Name = " Renamed ", IsCompleted = true },
+                new() { Name = "New" }
+            }
+        });
+
+        var saved = await _taskService.GetTaskByIdAsync(task.Id);
+        Assert.NotNull(saved);
+        Assert.Equal("Updated", saved.Name);
+        Assert.Equal(3, saved.CategoryId);
+        Assert.Equal(task.CreatedAt, saved.CreatedAt);
+        Assert.Equal(DateTime.Today.AddDays(2), saved.DueDate);
+        Assert.Single(await _taskService.GetAllTasksAsync());
+        var subtasks = await _subtaskRepository.GetByTaskIdAsync(task.Id);
+        Assert.Equal(2, subtasks.Count);
+        Assert.True(subtasks.Single(s => s.Id == keptId).IsCompleted);
+        Assert.Equal("Renamed", subtasks.Single(s => s.Id == keptId).Name);
+        Assert.DoesNotContain(subtasks, s => s.Id == removedId);
+        Assert.True(subtasks.Single(s => s.Name == "New").Id > 0);
+        Assert.All(subtasks, s => Assert.Equal(task.Id, s.TaskId));
+    }
+
+    [Fact]
+    public async Task UpdateTaskAsync_EmptySubtasks_ShouldRemoveAllAndClearDate()
+    {
+        var task = await _taskService.CreateTaskAsync(new CreateTaskRequest
+        {
+            Name = "Original", DueDate = DateTime.Today,
+            Subtasks = new() { new() { Name = "Remove" } }
+        });
+        await _taskService.UpdateTaskAsync(new UpdateTaskRequest
+        {
+            Id = task.Id, Name = task.Name, CategoryId = task.CategoryId, Subtasks = new()
+        });
+        Assert.Empty(await _subtaskRepository.GetByTaskIdAsync(task.Id));
+        Assert.Null((await _taskService.GetTaskByIdAsync(task.Id))!.DueDate);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UpdateTaskAsync_InvalidSubtaskIdentity_ShouldLeaveDatabaseUnchanged(bool duplicate)
+    {
+        var task = await _taskService.CreateTaskAsync(new CreateTaskRequest
+        {
+            Name = "Original", Subtasks = new() { new() { Name = "Keep" } }
+        });
+        var other = await _taskService.CreateTaskAsync(new CreateTaskRequest
+        {
+            Name = "Other", Subtasks = new() { new() { Name = "Foreign" } }
+        });
+        var own = (await _subtaskRepository.GetByTaskIdAsync(task.Id)).Single();
+        var foreign = (await _subtaskRepository.GetByTaskIdAsync(other.Id)).Single();
+        var drafts = new List<UpdateSubtaskDraft>
+        {
+            new() { Id = duplicate ? own.Id : foreign.Id, Name = "Bad update" }
+        };
+        if (duplicate) drafts.Add(new() { Id = own.Id, Name = "Duplicate" });
+
+        await Assert.ThrowsAsync<ArgumentException>(() => _taskService.UpdateTaskAsync(new UpdateTaskRequest
+        {
+            Id = task.Id, Name = "Must not save", CategoryId = 3, Subtasks = drafts
+        }));
+        Assert.Equal("Original", (await _taskService.GetTaskByIdAsync(task.Id))!.Name);
+        Assert.Equal("Keep", (await _subtaskRepository.GetByTaskIdAsync(task.Id)).Single().Name);
+        Assert.Equal("Foreign", (await _subtaskRepository.GetByTaskIdAsync(other.Id)).Single().Name);
+    }
+
+    [Fact]
+    public async Task UpdateTaskAsync_BlankSubtask_ShouldNotSaveTaskChanges()
+    {
+        var task = await _taskService.CreateTaskAsync(new CreateTaskRequest { Name = "Original" });
+        await Assert.ThrowsAsync<ArgumentException>(() => _taskService.UpdateTaskAsync(new UpdateTaskRequest
+        {
+            Id = task.Id, Name = "Must not save", CategoryId = 3,
+            Subtasks = new() { new() { Name = " " } }
+        }));
+        Assert.Equal("Original", (await _taskService.GetTaskByIdAsync(task.Id))!.Name);
+    }
+
     private AppDatabase _database = null!;
     private TaskService _taskService = null!;
     private SubtaskRepository _subtaskRepository = null!;
@@ -63,6 +186,27 @@ public class TaskServiceTests : IAsyncLifetime
         Assert.Equal(2, createdTask.CategoryId);
         Assert.False(createdTask.IsCompleted);
         Assert.Equal(request.DueDate, createdTask.DueDate);
+    }
+
+    [Fact]
+    public async Task CreateTaskAsync_ShouldPreserveSubtaskCompletion()
+    {
+        var task = await _taskService.CreateTaskAsync(new CreateTaskRequest
+        {
+            Name = "Task with completed draft",
+            Subtasks = new List<SubtaskDraft>
+            {
+                new() { Name = "Done", IsCompleted = true },
+                new() { Name = "Pending", IsCompleted = false }
+            }
+        });
+
+        var saved = await _subtaskRepository.GetByTaskIdAsync(task.Id);
+
+        Assert.Equal(2, saved.Count);
+        Assert.True(saved.Single(s => s.Name == "Done").IsCompleted);
+        Assert.False(saved.Single(s => s.Name == "Pending").IsCompleted);
+        Assert.All(saved, subtask => Assert.Equal(task.Id, subtask.TaskId));
     }
 
 

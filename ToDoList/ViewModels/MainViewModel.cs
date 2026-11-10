@@ -1,26 +1,96 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using Microsoft.Maui.Controls;
+using ToDoList.Core.Repositories;
 using ToDoList.Models;
 using ToDoList.Services;
-using ToDoList.Core.Repositories;
-using ToDoList.Core.DTOs;
 
 namespace ToDoList.ViewModels;
 
 public class MainViewModel : INotifyPropertyChanged
 {
     private readonly TaskService _taskService;
-
-    public ObservableCollection<TaskItem> Tasks { get; } = new();
     private readonly CategoryRepository _categoryRepository;
+
+    // Все загруженные задачи.
+    private readonly List<TaskItem> _allTasks = new();
+
+    // Выбранная категория: 0 означает «Все».
+    private int _selectedCategoryId;
+
+    // Состояние подтверждения удаления.
+    private TaskItem? _taskPendingDeletion;
+    private bool _isDeleting;
+    private bool _isDeleteConfirmationVisible;
+    private string _deleteConfirmationMessage = "";
+
+    // Коллекции для отображения.
+    public ObservableCollection<TaskItem> Tasks { get; } = new();
 
     public ObservableCollection<Category> Categories { get; } = new();
 
+    // Команды.
+    public ICommand SelectCategoryCommand { get; }
+
+    public Command<TaskItem> RequestDeleteTaskCommand { get; }
+
+    public Command ConfirmDeleteTaskCommand { get; }
+
+    public Command CancelDeleteTaskCommand { get; }
+
+    // Выбранная категория.
+    public int SelectedCategoryId => _selectedCategoryId;
+
+    // Пустое состояние.
     public bool IsEmpty => Tasks.Count == 0;
 
     public bool HasTasks => Tasks.Count > 0;
+
+    public string EmptyMessage => _selectedCategoryId == 0
+        ? "Задач пока нет"
+        : "В этой категории пока нет задач";
+
+    // Видимость диалога.
+    public bool IsDeleteConfirmationVisible
+    {
+        get => _isDeleteConfirmationVisible;
+        private set
+        {
+            if (_isDeleteConfirmationVisible == value)
+            {
+                return;
+            }
+
+            _isDeleteConfirmationVisible = value;
+
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsMainContentEnabled));
+        }
+    }
+
+    // Блокируем основной интерфейс, пока открыт диалог.
+    public bool IsMainContentEnabled => !IsDeleteConfirmationVisible;
+
+    // Вопрос или сообщение об ошибке в диалоге.
+    public string DeleteConfirmationMessage
+    {
+        get => _deleteConfirmationMessage;
+        private set
+        {
+            if (_deleteConfirmationMessage == value)
+            {
+                return;
+            }
+
+            _deleteConfirmationMessage = value;
+
+            OnPropertyChanged();
+        }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -31,8 +101,24 @@ public class MainViewModel : INotifyPropertyChanged
         _taskService = taskService;
         _categoryRepository = categoryRepository;
 
+        SelectCategoryCommand =
+            new Command<Category>(SelectCategory);
+
+        RequestDeleteTaskCommand =
+            new Command<TaskItem>(RequestDeleteTask);
+
+        ConfirmDeleteTaskCommand = new Command(
+            async () => await ConfirmDeleteTaskAsync(),
+            () => !_isDeleting);
+
+        CancelDeleteTaskCommand = new Command(
+            CancelDeleteTask,
+            () => !_isDeleting);
+
         Tasks.CollectionChanged += OnTasksChanged;
     }
+
+    // Загрузка категорий.
 
     public async Task LoadCategoriesAsync()
     {
@@ -53,66 +139,206 @@ public class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    // Загрузка задач.
+
     public async Task LoadTasksAsync()
     {
-        // Получаем задачи, которые уже есть в БД.
-        var tasks = await _taskService.GetAllTasksAsync();
+        const string seedKey = "SampleTaskCreated_v1";
 
-        // Если БД пустая — создаём тестовые задачи.
-        if (tasks.Count == 0)
+        if (!Microsoft.Maui.Storage.Preferences.Default.Get(seedKey, false))
         {
-            await _taskService.CreateTaskAsync(new CreateTaskRequest
-            {
-                Name = "Купить продукты",
-                CategoryId = 4,
-                DueDate = DateTime.Today,
-                Subtasks = []
-            });
-
-            await _taskService.CreateTaskAsync(new CreateTaskRequest
+            await _taskService.CreateTaskAsync(new ToDoList.Core.DTOs.CreateTaskRequest
             {
                 Name = "Закончить главный экран приложения",
                 CategoryId = 2,
-                DueDate = DateTime.Today.AddDays(1),
-                Subtasks = []
+                DueDate = DateTime.Today
             });
 
-            await _taskService.CreateTaskAsync(new CreateTaskRequest
-            {
-                Name = "Очень длинное название задачи для проверки отображения текста в карточке",
-                CategoryId = 3,
-                DueDate = null,
-                Subtasks = []
-            });
-
-            // Читаем из БД уже созданные задачи.
-            tasks = await _taskService.GetAllTasksAsync();
+            Microsoft.Maui.Storage.Preferences.Default.Set(seedKey, true);
         }
 
-        // Обновляем коллекцию, которую показывает экран.
+        var tasks = await _taskService.GetAllTasksAsync();
         var categories = await _categoryRepository.GetAllAsync();
-
-        Tasks.Clear();
 
         foreach (var task in tasks)
         {
             task.Category = categories.FirstOrDefault(
                 category => category.Id == task.CategoryId);
+        }
 
-            Tasks.Add(task);
+        _allTasks.Clear();
+        _allTasks.AddRange(tasks);
+
+        ApplyCategoryFilter();
+    }
+
+    public async Task SetTaskCompletedAsync(TaskItem task, bool isCompleted)
+    {
+        await _taskService.SetTaskCompletedAsync(task.Id, isCompleted);
+        task.IsCompleted = isCompleted;
+    }
+
+    // Выбор категории.
+
+    private void SelectCategory(Category? category)
+    {
+        if (category == null ||
+            IsDeleteConfirmationVisible ||
+            category.Id == _selectedCategoryId)
+        {
+            return;
+        }
+
+        _selectedCategoryId = category.Id;
+
+        OnPropertyChanged(nameof(SelectedCategoryId));
+        OnPropertyChanged(nameof(EmptyMessage));
+
+        ApplyCategoryFilter();
+    }
+
+    // Обновление видимого списка.
+
+    private void ApplyCategoryFilter()
+    {
+        var filteredTasks = _allTasks
+            .Where(task =>
+                _selectedCategoryId == 0 ||
+                task.CategoryId == _selectedCategoryId)
+            .ToList();
+
+        // Убираем задачи, которые больше не должны отображаться.
+        for (int i = Tasks.Count - 1; i >= 0; i--)
+        {
+            if (!filteredTasks.Contains(Tasks[i]))
+            {
+                Tasks.RemoveAt(i);
+            }
+        }
+
+        // Добавляем недостающие задачи и сохраняем порядок.
+        for (int i = 0; i < filteredTasks.Count; i++)
+        {
+            var task = filteredTasks[i];
+            int currentIndex = Tasks.IndexOf(task);
+
+            if (currentIndex == -1)
+            {
+                Tasks.Insert(i, task);
+            }
+            else if (currentIndex != i)
+            {
+                Tasks.Move(currentIndex, i);
+            }
         }
     }
 
-    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    // Открытие подтверждения. Здесь задача ещё не удаляется.
+
+    private void RequestDeleteTask(TaskItem? task)
+    {
+        if (task == null ||
+            _isDeleting ||
+            IsDeleteConfirmationVisible)
+        {
+            return;
+        }
+
+        _taskPendingDeletion = task;
+
+        DeleteConfirmationMessage =
+            $"Вы уверены, что хотите удалить задачу «{task.Name}»?";
+
+        IsDeleteConfirmationVisible = true;
+    }
+
+    // Отмена удаления.
+
+    private void CancelDeleteTask()
+    {
+        if (_isDeleting)
+        {
+            return;
+        }
+
+        CloseDeleteConfirmation();
+    }
+
+    // Удаление после подтверждения.
+
+    private async Task ConfirmDeleteTaskAsync()
+    {
+        if (_taskPendingDeletion == null ||
+            !IsDeleteConfirmationVisible ||
+            _isDeleting)
+        {
+            return;
+        }
+
+        var task = _taskPendingDeletion;
+
+        SetDeleting(true);
+
+        try
+        {
+            // Сначала удаляем запись из БД.
+            await _taskService.DeleteTaskAsync(task.Id);
+
+            // Затем обновляем загруженные данные.
+            _allTasks.RemoveAll(item => item.Id == task.Id);
+
+            // Фильтр уберёт удалённую задачу из видимого списка.
+            ApplyCategoryFilter();
+
+            CloseDeleteConfirmation();
+        }
+        catch (Exception exception)
+        {
+            Debug.WriteLine(exception);
+
+            DeleteConfirmationMessage =
+                "Не удалось удалить задачу. Повторить попытку?";
+        }
+        finally
+        {
+            SetDeleting(false);
+        }
+    }
+
+    private void CloseDeleteConfirmation()
+    {
+        IsDeleteConfirmationVisible = false;
+        _taskPendingDeletion = null;
+        DeleteConfirmationMessage = "";
+    }
+
+    // Обновление доступности кнопок диалога.
+
+    private void SetDeleting(bool value)
+    {
+        _isDeleting = value;
+
+        ConfirmDeleteTaskCommand.ChangeCanExecute();
+        CancelDeleteTaskCommand.ChangeCanExecute();
+    }
+
+    // Обновление пустого состояния при изменении списка.
+
+    private void OnTasksChanged(
+        object? sender,
+        NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(HasTasks));
+    }
+
+    private void OnPropertyChanged(
+        [CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(
             this,
             new PropertyChangedEventArgs(propertyName));
     }
 
-    private void OnTasksChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnPropertyChanged(nameof(IsEmpty));
-            OnPropertyChanged(nameof(HasTasks));
-        }
+
 }

@@ -67,5 +67,43 @@ namespace ToDoList.Core.Repositories
                 }
             });
         }
+
+        public async Task UpdateWithSubtasksAsync(TaskItem task, List<Subtask> subtasks)
+        {
+            var connection = await _database.GetConnectionAsync();
+            await connection.RunInTransactionAsync(transaction =>
+            {
+                var existing = transaction.Table<Subtask>()
+                    .Where(subtask => subtask.TaskId == task.Id).ToList();
+                var existingIds = existing.Select(subtask => subtask.Id).ToHashSet();
+                var retainedIds = subtasks.Where(subtask => subtask.Id > 0)
+                    .Select(subtask => subtask.Id).ToList();
+
+                if (retainedIds.Count != retainedIds.Distinct().Count() ||
+                    retainedIds.Any(id => !existingIds.Contains(id)))
+                {
+                    throw new ArgumentException("Подзадача не принадлежит редактируемой задаче.");
+                }
+
+                if (transaction.Update(task) != 1)
+                {
+                    throw new KeyNotFoundException("Задача больше не существует.");
+                }
+
+                foreach (var removed in existing.Where(subtask => !retainedIds.Contains(subtask.Id)))
+                {
+                    transaction.Delete(removed);
+                }
+
+                foreach (var subtask in subtasks)
+                {
+                    subtask.TaskId = task.Id;
+                    if (subtask.Id == 0)
+                        transaction.Insert(subtask);
+                    else
+                        transaction.Update(subtask);
+                }
+            });
+        }
     }
 }

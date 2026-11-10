@@ -78,8 +78,20 @@
 	  <Compile Update="Views\Components\CategoryCardView.xaml.cs">
 	    <DependentUpon>CategoryCardView.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Views\Components\ConfirmationDialog.xaml.cs">
+	    <DependentUpon>ConfirmationDialog.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\Components\AddOrCreateSubtask.xaml.cs">
+	    <DependentUpon>AddOrCreateSubtask.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\Components\SubtaskCardView.xaml.cs">
+	    <DependentUpon>SubtaskCardView.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Views\Components\TaskCardView.xaml.cs">
 	    <DependentUpon>TaskCardView.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\TaskEditorPage.xaml.cs">
+	    <DependentUpon>TaskEditorPage.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 
@@ -87,7 +99,19 @@
 	  <MauiXaml Update="Views\Components\CategoryCardView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Views\Components\ConfirmationDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Components\AddOrCreateSubtask.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Components\SubtaskCardView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Views\Components\TaskCardView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\TaskEditorPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>

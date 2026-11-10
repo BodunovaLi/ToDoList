@@ -21,4 +21,10 @@ public partial class MainPage : ContentPage
         await _viewModel.LoadCategoriesAsync();
         await _viewModel.LoadTasksAsync();
     }
+
+    private async void OnCreateTaskClicked(object? sender, EventArgs e)
+    {
+        await Shell.Current.GoToAsync("task-editor?mode=create");
+    }
+
 }

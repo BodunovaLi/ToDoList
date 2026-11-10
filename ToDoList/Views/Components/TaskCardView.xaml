@@ -3,6 +3,7 @@
 <ContentView
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:viewModels="clr-namespace:ToDoList.ViewModels"
     x:Class="ToDoList.Views.Components.TaskCardView"
     x:Name="TaskCardRoot">
 
@@ -18,15 +19,14 @@
             ColumnDefinitions="Auto,*,Auto,Auto"
             ColumnSpacing="16">
 
-            <!-- 1. Кружочек выполнения -->
-            <Border
+            <!-- 1. Отметка выполнения -->
+            <CheckBox
+                x:Name="CompletionCheckBox"
                 Grid.Column="0"
-                WidthRequest="36"
-                HeightRequest="36"
-                BackgroundColor="Transparent"
-                Stroke="#BFC0CC"
-                StrokeThickness="1"
-                StrokeShape="RoundRectangle 18"
+                IsChecked="{Binding IsCompleted, Mode=OneWay}"
+                CheckedChanged="OnCompletionCheckedChanged"
+                Color="#A48BFF"
+                SemanticProperties.Description="Выполнено"
                 VerticalOptions="Center"/>
 
             <!-- 2. Название и дата задачи -->
@@ -40,7 +40,14 @@
                     FontSize="22"
                     FontAttributes="Bold"
                     TextColor="White"
-                    LineBreakMode="TailTruncation"/>
+                    LineBreakMode="TailTruncation">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label" Binding="{Binding IsCompleted}" Value="True">
+                            <Setter Property="TextDecorations" Value="Strikethrough"/>
+                            <Setter Property="TextColor" Value="#A0A0B0"/>
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
 
                 <HorizontalStackLayout Spacing="7">
 
@@ -100,38 +107,34 @@
                 VerticalOptions="Center">
 
                 <!-- Редактирование -->
-                <Border
+                <ImageButton
+                    Clicked="OnCreateTaskClicked"
+                    Source="edit.png"
                     BackgroundColor="#292A3A"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 12"
+                    BorderWidth="0"
+                    CornerRadius="12"
                     WidthRequest="42"
-                    HeightRequest="42">
-
-                    <Image
-                        Source="edit.png"
-                        WidthRequest="21"
-                        HeightRequest="21"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center"/>
-
-                </Border>
+                    HeightRequest="42"
+                    MinimumWidthRequest="0"
+                    MinimumHeightRequest="0"
+                    Padding="10"
+                    />
 
                 <!-- Удаление -->
-                <Border
+                <ImageButton
+                    Command="{Binding RequestDeleteTaskCommand,
+                        Source={RelativeSource AncestorType={x:Type viewModels:MainViewModel}}}"
+                    CommandParameter="{Binding .}"
+                    Source="delete.png"
                     BackgroundColor="#292A3A"
-                    StrokeThickness="0"
-                    StrokeShape="RoundRectangle 12"
+                    BorderWidth="0"
+                    CornerRadius="12"
                     WidthRequest="42"
-                    HeightRequest="42">
-
-                    <Image
-                        Source="delete.png"
-                        WidthRequest="21"
-                        HeightRequest="21"
-                        HorizontalOptions="Center"
-                        VerticalOptions="Center"/>
-
-                </Border>
+                    HeightRequest="42"
+                    MinimumWidthRequest="0"
+                    MinimumHeightRequest="0"
+                    Padding="10"
+                    />
 
             </HorizontalStackLayout>
 

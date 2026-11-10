@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:components="clr-namespace:ToDoList.Views.Components"
+    x:Name="TaskEditorPageRoot"
+    x:Class="ToDoList.Views.TaskEditorPage"
+    BackgroundColor="#10111C"
+    Shell.NavBarIsVisible="False">
+
+    <Grid>
+
+        <ScrollView x:Name="EditorContent"
+                    Orientation="Vertical"
+                    IsEnabled="{Binding IsFormEnabled}">
+
+            <Grid
+                Padding="20,30">
+                <Grid
+                    RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
+                    RowSpacing="25"
+                    MaximumWidthRequest="800"
+                    HorizontalOptions="Fill">
+
+                    <Grid
+                        ColumnDefinitions="Auto,Auto"
+                        ColumnSpacing="20">
+                        <Grid
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            HorizontalOptions="Start"
+                            VerticalOptions="Center">
+
+                            <Button
+                                Clicked="GoBack"
+                                MinimumWidthRequest="0"
+                                MinimumHeightRequest="0"
+                                BackgroundColor="#1E1F2A"
+                                BorderColor="#666774"
+                                BorderWidth="1"
+                                CornerRadius="11"
+                                Padding="0"/>
+
+                            <Polyline
+                                Points="23,12 15,20 23,28"
+                                Stroke="White"
+                                StrokeThickness="2"
+                                StrokeLineJoin="Round"
+                                InputTransparent="True"/>
+
+                        </Grid>
+                        <VerticalStackLayout
+                            Grid.Column="1"
+                            Spacing="5">
+                            <Label
+                                Text="{Binding Header}"
+                                FontSize="28"
+                                FontAttributes="Bold">
+
+                            </Label>
+                            <Label
+                                Text="{Binding SubHeader}">
+                            </Label>
+                        </VerticalStackLayout>
+
+                    </Grid>
+                    <Border Grid.Row="1"
+                        Stroke="#666774"
+                        BackgroundColor="#1E1F2A"
+                        StrokeShape="RoundRectangle 10">
+                        <Entry
+                            Text="{Binding Name, Mode=TwoWay}"
+                            Placeholder="Введите название задачи"
+                            BackgroundColor="#1E1F2A"/>
+                    </Border>
+
+                    <VerticalStackLayout Grid.Row="2" Spacing="15">
+                        <Label
+                            Text="Категория"
+                            FontSize="20"
+                            FontAttributes="Bold"/>
+                        <FlexLayout
+                            Grid.Row="1"
+                            Direction="Row"
+                            Wrap="Wrap"
+                            JustifyContent="Start"
+                            AlignItems="Center"
+                            BindableLayout.ItemsSource="{Binding Categories}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <components:CategoryCardView Margin="0,0,10,0"
+                                        SelectedCategoryId="{Binding BindingContext.SelectedCategoryId,
+                                        Source={x:Reference TaskEditorPageRoot}}">
+                                        <components:CategoryCardView.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding BindingContext.SelectCategoryCommand,
+                                                Source={x:Reference TaskEditorPageRoot}}"
+                                                CommandParameter="{Binding .}"/>
+                                        </components:CategoryCardView.GestureRecognizers>
+                                    </components:CategoryCardView>
+
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+
+                        </FlexLayout>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="3" Spacing="15">
+                        <Label
+                            Text="Подзадачи"
+                            FontSize="20"
+                            FontAttributes="Bold"/>
+
+                        <VerticalStackLayout
+                            Spacing="0"
+                            BindableLayout.ItemsSource="{Binding Subtasks}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <components:SubtaskCardView
+                                        EditRequested="OnSubtaskEditRequested"
+                                        DeleteRequested="OnSubtaskDeleteRequested"/>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+
+                        <Border
+                            Stroke="#666774"
+                            BackgroundColor="#1E1F2A"
+                            StrokeShape="RoundRectangle 10">
+                            <Button
+                                Clicked="AddSubtask"
+                                Text="Добавить подзадачу"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                />
+                        </Border>
+
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="4" Spacing="15">
+                        <Label
+                            Text="Дата выполнения"
+                            FontSize="20"
+                            FontAttributes="Bold"/>
+
+                        <Grid
+                            HeightRequest="48"
+                            BackgroundColor="#1E1F2A">
+
+                            <DatePicker
+                                HorizontalOptions="Center"
+                                x:Name="DueDatePicker"
+                                Date="{Binding PlannedDate, Mode=TwoWay}"
+                                Format="dd.MM.yyyy"
+                                Opacity="0"
+                                InputTransparent="True"/>
+
+                            <Grid
+                                ColumnDefinitions="24,*"
+                                ColumnSpacing="16"
+                                Padding="20,0,56,0"
+                                InputTransparent="True">
+
+                                <Image
+                                    Source="calendar.png"
+                                    WidthRequest="24"
+                                    HeightRequest="24"
+                                    VerticalOptions="Center"/>
+
+                                <Label
+                                    Grid.Column="1"
+                                    Text="{Binding PlannedDate,
+                                           StringFormat='{0:dd.MM.yyyy}',
+                                           TargetNullValue='Выберите дату'}"
+                                    FontSize="16"
+                                    TextColor="White"
+                                    VerticalOptions="Center"/>
+
+                            </Grid>
+
+                            <!-- Кнопка поверх всех остальных элементов. -->
+                            <Button
+                                ZIndex="1"
+                                Clicked="OnSelectDateClicked"
+                                BackgroundColor="Transparent"
+                                BorderColor="#666774"
+                                BorderWidth="1"
+                                CornerRadius="12"
+                                Padding="0"/>
+
+                            <Button
+                                ZIndex="2"
+                                Text="×"
+                                FontSize="24"
+                                TextColor="#D0D0DA"
+                                BackgroundColor="Transparent"
+                                BorderWidth="0"
+                                WidthRequest="36"
+                                HeightRequest="36"
+                                MinimumWidthRequest="0"
+                                MinimumHeightRequest="0"
+                                Padding="0"
+                                Margin="0,0,8,0"
+                                HorizontalOptions="End"
+                                VerticalOptions="Center"
+                                IsVisible="{Binding HasPlannedDate}"
+                                Clicked="OnClearDateClicked"
+                                SemanticProperties.Description="Убрать дату выполнения"/>
+
+                        </Grid>
+
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Grid.Row="5" Spacing="10">
+                        <Label
+                            Text="{Binding SaveErrorMessage}"
+                            IsVisible="{Binding HasSaveError}"
+                            TextColor="#FCA5A5"/>
+
+                        <Button Text="{Binding SaveButtonText}"
+                            Command="{Binding SaveTaskCommand}"
+                            BackgroundColor="#6546DF"
+                            BorderColor="#A48BFF"
+                            TextColor="White"
+                            BorderWidth="1"/>
+                    </VerticalStackLayout>
+
+                </Grid>
+
+            </Grid>
+        </ScrollView>
+
+
+        <components:AddOrCreateSubtask
+            x:Name="SubtaskDialog"
+            IsVisible="False"
+            ZIndex="10"
+            CancelRequested="OnSubtaskCancelRequested"
+            AddRequested="OnSubtaskAddRequested"/>
+
+    </Grid>
+
+</ContentPage>

@@ -4,7 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     x:Class="ToDoList.Views.Components.CategoryCardView"
     x:Name="CategoryRoot">
+
+    <ContentView.GestureRecognizers>
+        <PointerGestureRecognizer
+            PointerEntered="OnPointerEntered"
+            PointerExited="OnPointerExited"/>
+    </ContentView.GestureRecognizers>
+
     <Border
+        x:Name="CategoryBorder"
         BackgroundColor="{Binding BackgroundColor}"
         StrokeThickness="1.5"
         StrokeShape="RoundRectangle 18"

@@ -5,37 +5,40 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:components="clr-namespace:ToDoList.Views.Components"
     x:Class="ToDoList.MainPage"
+    x:Name="MainPageRoot"
     BackgroundColor="#10111C"
     Shell.NavBarIsVisible="False">
-
-    <!-- Основной контейнер страницы -->
-    <Grid Padding="20,30">
-        <Grid
+    <Grid>
+        <!-- Основной контейнер страницы -->
+    <Grid
+        Padding="20,30"
+        IsEnabled="{Binding IsMainContentEnabled}">
+            <Grid
             RowDefinitions="Auto,Auto,*"
             RowSpacing="25"
             MaximumWidthRequest="1000"
             HorizontalOptions="Fill">
 
-            <!-- 1. Заголовок страницы -->
-            <VerticalStackLayout
+                <!-- 1. Заголовок страницы -->
+                <VerticalStackLayout
                 Grid.Row="0"
                 Spacing="1">
 
-                <Label
+                    <Label
                     Text="Мои задачи"
                     FontSize="28"
                     FontAttributes="Bold"
                     TextColor="White"/>
 
-                <Label
+                    <Label
                     Text="Планируй сегодня&#10;для лучшего завтра"
                     FontSize="14"
                     TextColor="#A0A0B0"/>
 
-            </VerticalStackLayout>
+                </VerticalStackLayout>
 
-            <!-- 2. Категории -->
-            <FlexLayout
+                <!-- 2. Категории -->
+                <FlexLayout
                 Grid.Row="1"
                 Direction="Row"
                 Wrap="Wrap"
@@ -43,61 +46,72 @@
                 AlignItems="Center"
                 BindableLayout.ItemsSource="{Binding Categories}">
 
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate>
-                        <components:CategoryCardView Margin="0,0,10,10"/>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate>
+                            <components:CategoryCardView
+                                            Margin="0,0,10,0"
+                                            SelectedCategoryId="{Binding BindingContext.SelectedCategoryId,
+                                                                         Source={x:Reference MainPageRoot}}">
 
-            </FlexLayout>
+                                <components:CategoryCardView.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding BindingContext.SelectCategoryCommand,
+                                                          Source={x:Reference MainPageRoot}}"
+                                        CommandParameter="{Binding .}"/>
+                                </components:CategoryCardView.GestureRecognizers>
 
-            <!-- 3. Основной контент -->
-            <Grid Grid.Row="2">
+                            </components:CategoryCardView>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
 
-                <!-- 3.1. Пустое состояние -->
-                <ScrollView
+                </FlexLayout>
+
+                <!-- 3. Основной контент -->
+                <Grid Grid.Row="2">
+
+                    <!-- 3.1. Пустое состояние -->
+                    <ScrollView
                     IsVisible="{Binding IsEmpty}"
                     Orientation="Vertical">
 
-                    <VerticalStackLayout
+                        <VerticalStackLayout
                         Spacing="15"
                         MaximumWidthRequest="400"
                         HorizontalOptions="Center"
                         Padding="0,20">
 
-                        <!-- Иллюстрация -->
-                        <Grid
+                            <!-- Иллюстрация -->
+                            <Grid
                             MaximumWidthRequest="300"
                             HorizontalOptions="Fill">
 
-                            <Image
+                                <Image
                                 Source="notasks.png"
                                 Aspect="AspectFit"
                                 HorizontalOptions="Fill"
                                 VerticalOptions="Center"/>
 
-                        </Grid>
+                            </Grid>
 
-                        <!-- Заголовок и описание -->
-                        <VerticalStackLayout Spacing="10">
-
-                            <Label
-                                Text="Задач пока нет"
+                            <!-- Заголовок и описание -->
+                            <VerticalStackLayout Spacing="10">
+                                <Label
+                                Text="{Binding EmptyMessage}"
                                 FontSize="24"
                                 FontAttributes="Bold"
                                 TextColor="White"
                                 HorizontalTextAlignment="Center"/>
 
-                            <Label
+                                <Label
                                 Text="Создайте первую задачу, чтобы начать"
                                 FontSize="14"
                                 TextColor="#A0A0B0"
                                 HorizontalTextAlignment="Center"/>
 
-                        </VerticalStackLayout>
+                            </VerticalStackLayout>
 
-                        <!-- Кнопка создания задачи -->
-                        <Border
+                            <!-- Кнопка создания задачи -->
+                            <Border
                             BackgroundColor="#6546DF"
                             Stroke="#A48BFF"
                             StrokeThickness="1"
@@ -105,59 +119,117 @@
                             Padding="20,15"
                             Margin="0,20,0,0"
                             HorizontalOptions="Fill">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnCreateTaskClicked"/>
+                                </Border.GestureRecognizers>
 
-                            <HorizontalStackLayout
+                                <HorizontalStackLayout
                                 Spacing="15"
                                 HorizontalOptions="Center">
 
-                                <Label
+                                    <Label
                                     Text="+"
                                     FontSize="24"
                                     TextColor="White"
                                     VerticalOptions="Center"/>
 
-                                <Label
+                                    <Label
                                     Text="Создать задачу"
                                     FontSize="16"
                                     FontAttributes="Bold"
                                     TextColor="White"
                                     VerticalOptions="Center"/>
 
-                            </HorizontalStackLayout>
+                                </HorizontalStackLayout>
 
-                        </Border>
+                            </Border>
 
-                    </VerticalStackLayout>
+                        </VerticalStackLayout>
 
-                </ScrollView>
+                    </ScrollView>
 
-                <!-- 3.2. Список задач -->
-                <CollectionView
+                    <!-- 3.2. Список задач -->
+                    <CollectionView
                     IsVisible="{Binding HasTasks}"
                     ItemsSource="{Binding Tasks}"
                     ItemSizingStrategy="MeasureAllItems">
 
-                    <!-- Расстояние между карточками -->
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout
+                        <!-- Расстояние между карточками -->
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout
                             Orientation="Vertical"
                             ItemSpacing="12"/>
-                    </CollectionView.ItemsLayout>
+                        </CollectionView.ItemsLayout>
 
-                    <!-- Шаблон одной карточки -->
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate>
+                        <!-- Шаблон одной карточки -->
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
 
-                            <components:TaskCardView/>
+                                <components:TaskCardView/>
 
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
 
-                </CollectionView>
+                    </CollectionView>
+
+                    <!-- Кнопка добавления внизу справа внутри области списка задач. -->
+                    <Grid
+                        IsVisible="{Binding HasTasks}"
+                        WidthRequest="64"
+                        HeightRequest="64"
+                        HorizontalOptions="End"
+                        VerticalOptions="End"
+                        Margin="0,0,12,12"
+                        ZIndex="1">
+
+                        <Button
+                            Clicked="OnCreateTaskClicked"
+                            BackgroundColor="#6546DF"
+                            BorderColor="#A48BFF"
+                            BorderWidth="1"
+                            CornerRadius="32"
+                            Padding="0"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill"/>
+
+                        <!-- Плюс из двух линий точно по центру круга. -->
+                        <Grid
+                            WidthRequest="24"
+                            HeightRequest="24"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center"
+                            InputTransparent="True">
+
+                            <BoxView
+                                Color="White"
+                                WidthRequest="24"
+                                HeightRequest="2"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"/>
+
+                            <BoxView
+                                Color="White"
+                                WidthRequest="2"
+                                HeightRequest="24"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"/>
+
+                        </Grid>
+
+                    </Grid>
+
+                </Grid>
 
             </Grid>
 
         </Grid>
+
+    <components:ConfirmationDialog
+        ZIndex="10"
+        IsVisible="{Binding IsDeleteConfirmationVisible}"
+        Message="{Binding DeleteConfirmationMessage}"
+        ConfirmCommand="{Binding ConfirmDeleteTaskCommand}"
+        CancelCommand="{Binding CancelDeleteTaskCommand}"/>
 
     </Grid>
 
