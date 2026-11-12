@@ -8,12 +8,12 @@
     HorizontalOptions="Fill"
     VerticalOptions="Fill">
 
-    <!-- Затемнение занимает всё доступное пространство. -->
+
     <Grid
         BackgroundColor="#99000000"
         Padding="24">
 
-        <!-- Окно диалога находится по центру. -->
+
         <Border
             BackgroundColor="#1B1B2A"
             Stroke="#343546"
@@ -29,7 +29,7 @@
 
                 <Label
                     x:Name="DialogTitle"
-                    Text="Добавить подзадачу"
+                    Text="{Binding Title, Source={x:Reference DialogRoot}}"
                     FontSize="18"
                     FontAttributes="Bold"
                     TextColor="White"
@@ -38,6 +38,7 @@
 
                 <Entry
                     x:Name="SubtaskNameEntry"
+                    Text="{Binding Text, Source={x:Reference DialogRoot}, Mode=TwoWay}"
                     Placeholder="Название подзадачи..."
                     BackgroundColor="#1E1F2A"/>
 
@@ -48,7 +49,7 @@
                     <Button
                         Grid.Column="0"
                         Text="Отмена"
-                        Clicked="GoBack"
+                        Command="{Binding CancelCommand, Source={x:Reference DialogRoot}}"
                         BackgroundColor="#2C2C3E"
                         TextColor="White"
                         FontSize="14"
@@ -57,10 +58,10 @@
                         Padding="12,10"/>
 
                     <Button
-                        Clicked="OnAddClicked"
                         Grid.Column="1"
                         x:Name="ConfirmButton"
-                        Text="Добавить"
+                        Text="{Binding ConfirmationText, Source={x:Reference DialogRoot}}"
+                        Command="{Binding ConfirmCommand, Source={x:Reference DialogRoot}}"
                         BackgroundColor="#6546DF"
                         TextColor="White"
                         FontSize="14"
@@ -69,6 +70,10 @@
                         Padding="12,10"/>
 
                 </Grid>
+
+                <Label Text="{Binding ErrorText, Source={x:Reference DialogRoot}}"
+                       IsVisible="{Binding HasError, Source={x:Reference DialogRoot}}"
+                       TextColor="#FCA5A5" FontSize="14"/>
 
             </VerticalStackLayout>
 

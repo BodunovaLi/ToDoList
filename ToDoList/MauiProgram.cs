@@ -4,6 +4,7 @@ using ToDoList.Data;
 using ToDoList.ViewModels;
 using ToDoList.Core.Repositories;
 using ToDoList.Services;
+using ToDoList.Navigation;
 
 namespace ToDoList
 {
@@ -35,7 +36,11 @@ namespace ToDoList
             builder.Services.AddTransient<SubtaskRepository>();
             builder.Services.AddTransient<TaskService>();
             builder.Services.AddTransient<TaskEditorViewModel>();
+            builder.Services.AddSingleton<INavigationService, ShellNavigationService>();
             builder.Services.AddTransient<ToDoList.Views.TaskEditorPage>();
+            builder.Services.AddTransient<SubtaskService>();
+            builder.Services.AddTransient<TaskDetailsViewModel>();
+            builder.Services.AddTransient<ToDoList.Views.TaskDetailsPage>();
 
             return builder.Build();
         }

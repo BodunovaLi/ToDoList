@@ -10,6 +10,6 @@ public class UpdateTaskRequest
 
     public DateTime? DueDate { get; set; }
 
-    // Null preserves existing subtasks; an empty list removes them all.
+
     public List<UpdateSubtaskDraft>? Subtasks { get; set; }
 }

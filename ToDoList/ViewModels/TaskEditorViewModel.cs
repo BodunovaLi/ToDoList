@@ -5,6 +5,7 @@ using ToDoList.Core.DTOs;
 using ToDoList.Core.Repositories;
 using ToDoList.Models;
 using ToDoList.Services;
+using ToDoList.Navigation;
 
 namespace ToDoList.ViewModels;
 
@@ -13,6 +14,10 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
     private readonly CategoryRepository _categoryRepos;
     private readonly TaskService _taskService;
     private readonly SubtaskRepository _subtaskRepository;
+    private readonly INavigationService _navigation;
+    private Subtask? _editingSubtask;
+    private string _subtaskName = "";
+    private bool _isNavigating;
     private int _taskId;
     private bool _initialized;
     private bool _isLoading;
@@ -30,11 +35,34 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
     public string Header => IsEditMode ? "Редактирование задачи" : "Создать задачу";
     public string SubHeader => IsEditMode ? "Отредактируйте задачу" : "Создайте задачу и добавьте детали";
     public string SaveButtonText => IsEditMode ? "Сохранить изменения" : "Добавить задачу";
-    public int SelectedCategoryId { get; private set; }
+    public int SelectedCategoryId { get; private set; } = 5;
     public Command<Category> SelectCategoryCommand { get; }
     public Command SaveTaskCommand { get; }
-    public bool IsFormEnabled => !_isLoading && !_isSaving && !IsSubtaskDialogOpen;
+    public Command BackCommand { get; }
+    public Command AddSubtaskCommand { get; }
+    public Command<Subtask> EditSubtaskCommand { get; }
+    public Command<Subtask> RemoveSubtaskCommand { get; }
+    public Command ConfirmSubtaskCommand { get; }
+    public Command CancelSubtaskCommand { get; }
+    public Command ClearDateCommand { get; }
+    public bool IsFormEnabled => !_isLoading && !_isSaving && !_isNavigating && !IsSubtaskDialogOpen;
+    private bool CanEditDraft => _initialized && !_saved && IsFormEnabled;
     public bool HasSaveError => !string.IsNullOrEmpty(SaveErrorMessage);
+
+    public string SubtaskDialogTitle => _editingSubtask == null ? "Добавить подзадачу" : "Редактирование подзадачи";
+    public string SubtaskConfirmText => _editingSubtask == null ? "Добавить" : "Сохранить";
+
+    public string SubtaskName
+    {
+        get => _subtaskName;
+        set
+        {
+            if (_subtaskName == value) return;
+            _subtaskName = value;
+            OnPropertyChanged();
+            ConfirmSubtaskCommand.ChangeCanExecute();
+        }
+    }
 
     public string Name
     {
@@ -59,10 +87,12 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
     public bool IsSubtaskDialogOpen
     {
         get => _isSubtaskDialogOpen;
-        set
+        private set
         {
+            if (_isSubtaskDialogOpen == value) return;
             _isSubtaskDialogOpen = value;
-            OnPropertyChanged(nameof(IsFormEnabled));
+            OnPropertyChanged();
+            RefreshAvailability();
         }
     }
 
@@ -80,14 +110,33 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public TaskEditorViewModel(CategoryRepository categoryRepos, TaskService taskService,
-        SubtaskRepository subtaskRepository)
+        SubtaskRepository subtaskRepository, INavigationService navigation)
     {
         _categoryRepos = categoryRepos;
         _taskService = taskService;
         _subtaskRepository = subtaskRepository;
+        _navigation = navigation;
         SelectCategoryCommand = new Command<Category>(SelectCategory);
         SaveTaskCommand = new Command(async () => await SaveTaskAsync(),
-            () => _initialized && !_isLoading && !_isSaving && !_saved && !IsSubtaskDialogOpen);
+            () => CanEditDraft);
+        BackCommand = new Command(async () => await GoBackAsync(),
+            () => !_isLoading && !_isSaving && !_isNavigating && !IsSubtaskDialogOpen);
+        AddSubtaskCommand = new Command(() => OpenSubtaskDialog(null), () => CanEditDraft);
+        EditSubtaskCommand = new Command<Subtask>(subtask =>
+        {
+            if (subtask != null && Subtasks.Contains(subtask)) OpenSubtaskDialog(subtask);
+        }, subtask => CanEditDraft && subtask != null);
+        RemoveSubtaskCommand = new Command<Subtask>(subtask =>
+        {
+            if (CanEditDraft && subtask != null) Subtasks.Remove(subtask);
+        }, subtask => CanEditDraft && subtask != null);
+        ConfirmSubtaskCommand = new Command(ConfirmSubtask,
+            () => IsSubtaskDialogOpen && !string.IsNullOrWhiteSpace(SubtaskName));
+        CancelSubtaskCommand = new Command(CloseSubtaskDialog, () => IsSubtaskDialogOpen);
+        ClearDateCommand = new Command(() =>
+        {
+            if (CanEditDraft) PlannedDate = null;
+        }, () => CanEditDraft);
     }
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
@@ -104,7 +153,7 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
 
     public async Task InitializeAsync()
     {
-        // Reappearing must not overwrite changes that are still being edited.
+
         if (_initialized || _isLoading) return;
         _isLoading = true;
         RefreshAvailability();
@@ -149,7 +198,7 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
 
     private async Task SaveTaskAsync()
     {
-        if (!_initialized || _isLoading || _isSaving || _saved || IsSubtaskDialogOpen) return;
+        if (!CanEditDraft) return;
         SaveErrorMessage = "";
         if (string.IsNullOrWhiteSpace(Name))
         {
@@ -198,7 +247,7 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
                 });
             }
             _saved = true;
-            await Shell.Current.GoToAsync("..");
+            await _navigation.GoBackAsync();
         }
         catch (Exception exception)
         {
@@ -216,35 +265,76 @@ public class TaskEditorViewModel : IQueryAttributable, INotifyPropertyChanged
 
     private void SelectCategory(Category? category)
     {
-        if (category == null) return;
+        if (!CanEditDraft || category == null) return;
         SelectedCategoryId = category.Id;
         OnPropertyChanged(nameof(SelectedCategoryId));
     }
 
-    public void AddSubtask(string name)
+    private void OpenSubtaskDialog(Subtask? subtask)
     {
-        if (string.IsNullOrWhiteSpace(name)) return;
-        Subtasks.Add(new Subtask { Name = name.Trim(), IsCompleted = false });
+        if (!CanEditDraft) return;
+        _editingSubtask = subtask;
+        SubtaskName = subtask?.Name ?? "";
+        OnPropertyChanged(nameof(SubtaskDialogTitle));
+        OnPropertyChanged(nameof(SubtaskConfirmText));
+        IsSubtaskDialogOpen = true;
     }
 
-    public void EditSubtask(Subtask subtask, string name)
+    private void ConfirmSubtask()
     {
-        int index = Subtasks.IndexOf(subtask);
-        if (index < 0 || string.IsNullOrWhiteSpace(name)) return;
-        // Replace the draft so the row refreshes without changing the database model.
-        Subtasks[index] = new Subtask
+        if (!IsSubtaskDialogOpen || string.IsNullOrWhiteSpace(SubtaskName)) return;
+        if (_editingSubtask == null)
         {
-            Id = subtask.Id, TaskId = subtask.TaskId,
-            Name = name.Trim(), IsCompleted = subtask.IsCompleted
-        };
+            Subtasks.Add(new Subtask { Name = SubtaskName.Trim() });
+        }
+        else if (Subtasks.Contains(_editingSubtask))
+        {
+            _editingSubtask.Name = SubtaskName.Trim();
+        }
+        CloseSubtaskDialog();
     }
 
-    public void RemoveSubtask(Subtask subtask) => Subtasks.Remove(subtask);
+    private void CloseSubtaskDialog()
+    {
+        _editingSubtask = null;
+        SubtaskName = "";
+        IsSubtaskDialogOpen = false;
+        OnPropertyChanged(nameof(SubtaskDialogTitle));
+        OnPropertyChanged(nameof(SubtaskConfirmText));
+    }
+
+    private async Task GoBackAsync()
+    {
+        if (_isLoading || _isSaving || _isNavigating || IsSubtaskDialogOpen) return;
+        _isNavigating = true;
+        RefreshAvailability();
+        try
+        {
+            await _navigation.GoBackAsync();
+        }
+        catch (Exception exception)
+        {
+            System.Diagnostics.Debug.WriteLine(exception);
+            SaveErrorMessage = "Не удалось вернуться назад. Попробуйте ещё раз.";
+        }
+        finally
+        {
+            _isNavigating = false;
+            RefreshAvailability();
+        }
+    }
 
     private void RefreshAvailability()
     {
         OnPropertyChanged(nameof(IsFormEnabled));
         SaveTaskCommand.ChangeCanExecute();
+        BackCommand.ChangeCanExecute();
+        AddSubtaskCommand.ChangeCanExecute();
+        EditSubtaskCommand.ChangeCanExecute();
+        RemoveSubtaskCommand.ChangeCanExecute();
+        ConfirmSubtaskCommand.ChangeCanExecute();
+        CancelSubtaskCommand.ChangeCanExecute();
+        ClearDateCommand.ChangeCanExecute();
     }
 
     private void OnPropertyChanged([CallerMemberName] string? name = null) =>

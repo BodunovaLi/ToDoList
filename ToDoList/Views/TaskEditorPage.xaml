@@ -35,7 +35,7 @@
                             VerticalOptions="Center">
 
                             <Button
-                                Clicked="GoBack"
+                                Command="{Binding BackCommand}"
                                 MinimumWidthRequest="0"
                                 MinimumHeightRequest="0"
                                 BackgroundColor="#1E1F2A"
@@ -74,6 +74,8 @@
                         <Entry
                             Text="{Binding Name, Mode=TwoWay}"
                             Placeholder="Введите название задачи"
+                            TextColor="White"
+                            PlaceholderColor="#A0A0B0"
                             BackgroundColor="#1E1F2A"/>
                     </Border>
 
@@ -119,8 +121,10 @@
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate>
                                     <components:SubtaskCardView
-                                        EditRequested="OnSubtaskEditRequested"
-                                        DeleteRequested="OnSubtaskDeleteRequested"/>
+                                        EditCommand="{Binding BindingContext.EditSubtaskCommand,
+                                            Source={x:Reference TaskEditorPageRoot}}"
+                                        DeleteCommand="{Binding BindingContext.RemoveSubtaskCommand,
+                                            Source={x:Reference TaskEditorPageRoot}}"/>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>
                         </VerticalStackLayout>
@@ -130,7 +134,7 @@
                             BackgroundColor="#1E1F2A"
                             StrokeShape="RoundRectangle 10">
                             <Button
-                                Clicked="AddSubtask"
+                                Command="{Binding AddSubtaskCommand}"
                                 Text="Добавить подзадачу"
                                 BackgroundColor="Transparent"
                                 TextColor="White"
@@ -180,7 +184,7 @@
 
                             </Grid>
 
-                            <!-- Кнопка поверх всех остальных элементов. -->
+
                             <Button
                                 ZIndex="1"
                                 Clicked="OnSelectDateClicked"
@@ -206,7 +210,7 @@
                                 HorizontalOptions="End"
                                 VerticalOptions="Center"
                                 IsVisible="{Binding HasPlannedDate}"
-                                Clicked="OnClearDateClicked"
+                                Command="{Binding ClearDateCommand}"
                                 SemanticProperties.Description="Убрать дату выполнения"/>
 
                         </Grid>
@@ -235,10 +239,13 @@
 
         <components:AddOrCreateSubtask
             x:Name="SubtaskDialog"
-            IsVisible="False"
+            IsVisible="{Binding IsSubtaskDialogOpen}"
             ZIndex="10"
-            CancelRequested="OnSubtaskCancelRequested"
-            AddRequested="OnSubtaskAddRequested"/>
+            Text="{Binding SubtaskName, Mode=TwoWay}"
+            Title="{Binding SubtaskDialogTitle}"
+            ConfirmationText="{Binding SubtaskConfirmText}"
+            CancelCommand="{Binding CancelSubtaskCommand}"
+            ConfirmCommand="{Binding ConfirmSubtaskCommand}"/>
 
     </Grid>
 

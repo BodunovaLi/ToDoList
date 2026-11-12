@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:components="clr-namespace:ToDoList.Views.Components"
+    x:Class="ToDoList.Views.TaskDetailsPage"
+    x:Name="TaskDetailsPageRoot"
+    BackgroundColor="#10111C"
+    Shell.NavBarIsVisible="False">
+    <Grid>
+        <ScrollView>
+            <VerticalStackLayout
+                Padding="20,30"
+                Spacing="16"
+                MaximumWidthRequest="800"
+                HorizontalOptions="Fill">
+                <Grid
+                    ColumnDefinitions="*,Auto,Auto"
+                    ColumnSpacing="10">
+                    <Grid
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        HorizontalOptions="Start">
+                        <Button
+                            Command="{Binding BackCommand}"
+                            BackgroundColor="#1E1F2A"
+                            BorderColor="#666774"
+                            BorderWidth="1"
+                            CornerRadius="10"
+                            Padding="0"
+                            MinimumHeightRequest="0"
+                            MinimumWidthRequest="0"
+                            SemanticProperties.Description="Назад к списку задач"/>
+                        <Polyline
+                            Points="23,12 15,20 23,28"
+                            Stroke="White"
+                            StrokeThickness="2"
+                            StrokeLineJoin="Round"
+                            InputTransparent="True"/>
+                    </Grid>
+                    <ImageButton
+                        Grid.Column="1"
+                        Source="edit.png"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        MinimumWidthRequest="40"
+                        MinimumHeightRequest="40"
+                        Padding="10"
+                        CornerRadius="11"
+                        BackgroundColor="#292A3A"
+                        Command="{Binding EditCommand}"
+                        SemanticProperties.Description="Редактировать задачу">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup
+                                    Name="CommonStates">
+                                    <VisualState
+                                        Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter
+                                                Property="Opacity"
+                                                Value="1"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState
+                                        Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter
+                                                Property="Opacity"
+                                                Value="1"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState
+                                        Name="PointerOver"/>
+                                    <VisualState
+                                        Name="Pressed"/>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                    </ImageButton>
+                    <ImageButton
+                        Grid.Column="2"
+                        Source="delete.png"
+                        WidthRequest="40"
+                        HeightRequest="40"
+                        MinimumWidthRequest="40"
+                        MinimumHeightRequest="40"
+                        Padding="10"
+                        CornerRadius="11"
+                        BackgroundColor="#292A3A"
+                        Command="{Binding RequestDeleteCommand}"
+                        SemanticProperties.Description="Удалить задачу">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup
+                                    Name="CommonStates">
+                                    <VisualState
+                                        Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter
+                                                Property="Opacity"
+                                                Value="1"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState
+                                        Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter
+                                                Property="Opacity"
+                                                Value="1"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState
+                                        Name="PointerOver"/>
+                                    <VisualState
+                                        Name="Pressed"/>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                    </ImageButton>
+                </Grid>
+
+                <VerticalStackLayout
+                    IsVisible="{Binding HasPageError}"
+                    Spacing="8">
+                    <Label
+                        Text="{Binding ErrorMessage}"
+                        TextColor="#FCA5A5"/>
+                    <Button
+                        Text="Обновить данные"
+                        Command="{Binding RetryCommand}"
+                        BackgroundColor="#292A3A"
+                        TextColor="White"
+                        HorizontalOptions="Start"/>
+                </VerticalStackLayout>
+
+                <VerticalStackLayout
+                    IsVisible="{Binding HasTask}"
+                    InputTransparent="{Binding IsContentBlocked}"
+                    Spacing="26">
+                    <VerticalStackLayout
+                        Spacing="8">
+                        <Label
+                            Text="{Binding Name}"
+                            FontSize="28"
+                            FontAttributes="Bold"
+                            TextColor="#ECEAF0"
+                            LineBreakMode="WordWrap">
+                            <Label.Triggers>
+                                <DataTrigger
+                                    TargetType="Label"
+                                    Binding="{Binding IsCompleted}"
+                                    Value="True">
+                                    <Setter
+                                        Property="TextDecorations"
+                                        Value="Strikethrough"/>
+                                    <Setter
+                                        Property="TextColor"
+                                        Value="#A0A0B0"/>
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                        <Border
+                            BackgroundColor="{Binding Category.BackgroundColor}"
+                            Stroke="{Binding Category.Color}"
+                            StrokeShape="RoundRectangle 18"
+                            Padding="12,6"
+                            HorizontalOptions="Start">
+                            <HorizontalStackLayout
+                                Spacing="8">
+                                <Image
+                                    Source="{Binding Category.IconSource}"
+                                    WidthRequest="18"
+                                    HeightRequest="18"/>
+                                <Label
+                                    Text="{Binding Category.Name}"
+                                    TextColor="White"
+                                    FontSize="14"
+                                    VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout
+                        Spacing="10">
+                        <HorizontalStackLayout
+                            Spacing="12">
+                            <Label
+                                Text="Подзадачи"
+                                FontSize="20"
+                                FontAttributes="Bold"
+                                TextColor="#ECEAF0"
+                                VerticalOptions="Center"/>
+                            <Border
+                                BackgroundColor="#29283F"
+                                StrokeThickness="0"
+                                StrokeShape="RoundRectangle 14"
+                                Padding="12,3">
+                                <Label
+                                    Text="{Binding SubtaskProgress}"
+                                    FontSize="16"
+                                    TextColor="White"/>
+                            </Border>
+                        </HorizontalStackLayout>
+                        <Label
+                            Text="Добавьте первую подзадачу"
+                            IsVisible="{Binding HasNoSubtasks}"
+                            FontSize="14"
+                            TextColor="#A0A0B0"
+                            Margin="0,6"/>
+                        <VerticalStackLayout
+                            BindableLayout.ItemsSource="{Binding Subtasks}"
+                            Spacing="0">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid
+                                        RowDefinitions="Auto,1"
+                                        ColumnDefinitions="Auto,*,Auto,Auto"
+                                        ColumnSpacing="8">
+                                        <components:CommandCheckBox
+                                            CheckedValue="{Binding IsCompleted}"
+                                            Color="#A48BFF"
+                                            Command="{Binding BindingContext.ToggleSubtaskCompletionCommand, Source={x:Reference TaskDetailsPageRoot}}"
+                                            CommandParameter="{Binding .}"
+                                            SemanticProperties.Description="Подзадача выполнена"/>
+                                        <Label
+                                            Grid.Column="1"
+                                            Text="{Binding Name}"
+                                            TextColor="#ECEAF0"
+                                            FontSize="16"
+                                            VerticalOptions="Center"
+                                            LineBreakMode="WordWrap">
+                                            <Label.Triggers>
+                                                <DataTrigger
+                                                    TargetType="Label"
+                                                    Binding="{Binding IsCompleted}"
+                                                    Value="True">
+                                                    <Setter
+                                                        Property="TextDecorations"
+                                                        Value="Strikethrough"/>
+                                                    <Setter
+                                                        Property="TextColor"
+                                                        Value="#A0A0B0"/>
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                        <ImageButton
+                                            Grid.Column="2"
+                                            Source="edit.png"
+                                            WidthRequest="40"
+                                            HeightRequest="40"
+                                            MinimumWidthRequest="40"
+                                            MinimumHeightRequest="40"
+                                            Padding="10"
+                                            CornerRadius="11"
+                                            BackgroundColor="Transparent"
+                                            Command="{Binding BindingContext.EditSubtaskCommand, Source={x:Reference TaskDetailsPageRoot}}"
+                                            CommandParameter="{Binding .}"
+                                            SemanticProperties.Description="Редактировать подзадачу"/>
+                                        <ImageButton
+                                            Grid.Column="3"
+                                            Source="delete.png"
+                                            WidthRequest="40"
+                                            HeightRequest="40"
+                                            MinimumWidthRequest="40"
+                                            MinimumHeightRequest="40"
+                                            Padding="10"
+                                            CornerRadius="11"
+                                            BackgroundColor="Transparent"
+                                            Command="{Binding BindingContext.RequestDeleteSubtaskCommand, Source={x:Reference TaskDetailsPageRoot}}"
+                                            CommandParameter="{Binding .}"
+                                            SemanticProperties.Description="Удалить подзадачу"/>
+                                        <BoxView
+                                            Grid.Row="1"
+                                            Grid.ColumnSpan="4"
+                                            Color="#252535"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                        <Button
+                            Text="＋  Добавить подзадачу"
+                            Command="{Binding AddSubtaskCommand}"
+                            FontAttributes="Bold"
+                            BackgroundColor="#252338"
+                            BorderColor="#666477"
+                            BorderWidth="1"
+                            CornerRadius="12"
+                            TextColor="White"/>
+                    </VerticalStackLayout>
+
+                    <Border
+                        BackgroundColor="#181927"
+                        Stroke="#343546"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="16,12">
+                        <Grid
+                            ColumnDefinitions="24,*,Auto"
+                            ColumnSpacing="12">
+                            <Image
+                                Source="calendar.png"
+                                WidthRequest="22"
+                                HeightRequest="22"
+                                VerticalOptions="Center"/>
+                            <Label
+                                Grid.Column="1"
+                                Text="Дата выполнения"
+                                TextColor="#ECEAF0"
+                                VerticalOptions="Center"/>
+                            <Border
+                                Grid.Column="2"
+                                BackgroundColor="#29283F"
+                                Stroke="#34334D"
+                                StrokeShape="RoundRectangle 8"
+                                Padding="12,6">
+                                <Label
+                                    Text="{Binding DueDateText}"
+                                    TextColor="#ECEAF0"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Button
+                        Text="{Binding CompletionButtonText}"
+                        Command="{Binding ToggleCompletionCommand}"
+                        BackgroundColor="#6546DF"
+                        BorderColor="#A48BFF"
+                        BorderWidth="1"
+                        TextColor="White"
+                        CornerRadius="12"
+                        MinimumHeightRequest="50"/>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+
+        <ActivityIndicator
+            IsRunning="{Binding IsInitialLoading}"
+            IsVisible="{Binding IsInitialLoading}"
+            Color="#A48BFF"
+            HorizontalOptions="Center"
+            VerticalOptions="Center"
+            InputTransparent="True"
+            ZIndex="1"/>
+
+        <components:AddOrCreateSubtask
+            x:Name="SubtaskDialog"
+            ZIndex="10"
+            IsVisible="{Binding IsSubtaskDialogOpen}"
+            IsEnabled="{Binding IsDialogEnabled}"
+            Text="{Binding SubtaskName, Mode=TwoWay}"
+            Title="{Binding SubtaskDialogTitle}"
+            ConfirmationText="{Binding SubtaskConfirmText}"
+            ErrorText="{Binding ErrorMessage}"
+            CancelCommand="{Binding CancelSubtaskCommand}"
+            ConfirmCommand="{Binding ConfirmSubtaskCommand}"/>
+        <components:ConfirmationDialog
+            ZIndex="20"
+            IsVisible="{Binding IsDeleteConfirmationVisible}"
+            Message="{Binding DeleteConfirmationMessage}"
+            ConfirmCommand="{Binding ConfirmDeleteCommand}"
+            CancelCommand="{Binding CancelDeleteCommand}"/>
+    </Grid>
+</ContentPage>

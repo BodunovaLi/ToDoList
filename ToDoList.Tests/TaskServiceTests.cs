@@ -473,7 +473,7 @@ public class TaskServiceTests : IAsyncLifetime
         Assert.True(saved.IsCompleted);
     }
 
-    // 7. Сохранение подзадач
+
     [Fact]
     public async Task UpdateTaskAsync_ShouldPreserveSubtasks()
     {

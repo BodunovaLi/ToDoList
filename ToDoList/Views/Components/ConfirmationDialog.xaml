@@ -8,12 +8,12 @@
     HorizontalOptions="Fill"
     VerticalOptions="Fill">
 
-    <!-- Затемнение занимает всё доступное пространство. -->
+
     <Grid
         BackgroundColor="#99000000"
         Padding="24">
 
-        <!-- Окно диалога находится по центру. -->
+
         <Border
             BackgroundColor="#1B1B2A"
             Stroke="#343546"

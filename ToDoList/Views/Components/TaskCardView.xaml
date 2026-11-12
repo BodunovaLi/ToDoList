@@ -3,141 +3,161 @@
 <ContentView
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:viewModels="clr-namespace:ToDoList.ViewModels"
+    xmlns:components="clr-namespace:ToDoList.Views.Components"
     x:Class="ToDoList.Views.Components.TaskCardView"
     x:Name="TaskCardRoot">
 
-    <!-- Основная карточка задачи -->
+
     <Border
         BackgroundColor="#181927"
         Stroke="#343546"
         StrokeThickness="1"
         StrokeShape="RoundRectangle 14"
-        Padding="20,15">
+        Padding="0">
 
-        <Grid
-            ColumnDefinitions="Auto,*,Auto,Auto"
-            ColumnSpacing="16">
+        <Grid>
 
-            <!-- 1. Отметка выполнения -->
-            <CheckBox
-                x:Name="CompletionCheckBox"
-                Grid.Column="0"
-                IsChecked="{Binding IsCompleted, Mode=OneWay}"
-                CheckedChanged="OnCompletionCheckedChanged"
-                Color="#A48BFF"
-                SemanticProperties.Description="Выполнено"
-                VerticalOptions="Center"/>
 
-            <!-- 2. Название и дата задачи -->
-            <VerticalStackLayout
-                Grid.Column="1"
-                Spacing="4"
-                VerticalOptions="Center">
+            <Button
+                Command="{Binding OpenCommand, Source={x:Reference TaskCardRoot}}"
+                CommandParameter="{Binding .}"
+                BackgroundColor="Transparent"
+                BorderWidth="0"
+                Padding="0"
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill"
+                SemanticProperties.Description="Открыть задачу"/>
 
-                <Label
-                    Text="{Binding Name}"
-                    FontSize="22"
-                    FontAttributes="Bold"
-                    TextColor="White"
-                    LineBreakMode="TailTruncation">
-                    <Label.Triggers>
-                        <DataTrigger TargetType="Label" Binding="{Binding IsCompleted}" Value="True">
-                            <Setter Property="TextDecorations" Value="Strikethrough"/>
-                            <Setter Property="TextColor" Value="#A0A0B0"/>
-                        </DataTrigger>
-                    </Label.Triggers>
-                </Label>
+            <Grid
+                Padding="20,15"
+                ColumnDefinitions="Auto,*,Auto,Auto"
+                ColumnSpacing="16"
+                InputTransparent="True"
+                CascadeInputTransparent="False">
 
-                <HorizontalStackLayout Spacing="7">
-
-                    <Image
-                        Source="calendar.png"
-                        WidthRequest="17"
-                        HeightRequest="17"
-                        VerticalOptions="Center"/>
-
-                    <Label
-                        Text="{Binding DueDate, StringFormat='{0:dd MMMM yyyy}'}"
-                        FontSize="14"
-                        TextColor="#D0D0DA"
-                        VerticalOptions="Center"/>
-
-                </HorizontalStackLayout>
-
-            </VerticalStackLayout>
-
-            <!-- 3. Категория -->
-            <Border
-                Grid.Column="2"
-                BackgroundColor="{Binding Category.BackgroundColor}"
-                StrokeThickness="1"
-                StrokeShape="RoundRectangle 25"
-                Padding="15,10"
-                VerticalOptions="Center">
-                <Border.Stroke>
-                    <SolidColorBrush Color="{Binding BindingContext.Category.Color,
-                            Source={x:Reference TaskCardRoot},
-                            FallbackValue=Transparent,
-                            TargetNullValue=Transparent}"/>
-                </Border.Stroke>
-
-                <HorizontalStackLayout Spacing="10">
-
-                    <Image
-                        Source="{Binding Category.IconSource}"
-                        WidthRequest="20"
-                        HeightRequest="20"
-                        VerticalOptions="Center"/>
-
-                    <Label
-                        Text="{Binding Category.Name}"
-                        FontSize="14"
-                        TextColor="White"
-                        VerticalOptions="Center"/>
-
-                </HorizontalStackLayout>
-
-            </Border>
-
-            <!-- 4. Кнопки редактирования и удаления -->
-            <HorizontalStackLayout
-                Grid.Column="3"
-                Spacing="10"
-                VerticalOptions="Center">
-
-                <!-- Редактирование -->
-                <ImageButton
-                    Clicked="OnCreateTaskClicked"
-                    Source="edit.png"
-                    BackgroundColor="#292A3A"
-                    BorderWidth="0"
-                    CornerRadius="12"
-                    WidthRequest="42"
-                    HeightRequest="42"
-                    MinimumWidthRequest="0"
-                    MinimumHeightRequest="0"
-                    Padding="10"
-                    />
-
-                <!-- Удаление -->
-                <ImageButton
-                    Command="{Binding RequestDeleteTaskCommand,
-                        Source={RelativeSource AncestorType={x:Type viewModels:MainViewModel}}}"
+                <components:CommandCheckBox
+                    Grid.Column="0"
+                    InputTransparent="False"
+                    CheckedValue="{Binding IsCompleted}"
+                    Command="{Binding ToggleCompletionCommand, Source={x:Reference TaskCardRoot}}"
                     CommandParameter="{Binding .}"
-                    Source="delete.png"
-                    BackgroundColor="#292A3A"
-                    BorderWidth="0"
-                    CornerRadius="12"
-                    WidthRequest="42"
-                    HeightRequest="42"
-                    MinimumWidthRequest="0"
-                    MinimumHeightRequest="0"
-                    Padding="10"
-                    />
+                    Color="#A48BFF"
+                    SemanticProperties.Description="Выполнено"
+                    VerticalOptions="Center"/>
 
-            </HorizontalStackLayout>
 
+                <VerticalStackLayout
+                    Grid.Column="1"
+                    InputTransparent="True"
+                    Spacing="4"
+                    VerticalOptions="Center">
+
+                    <Label
+                        Text="{Binding Name}"
+                        FontSize="22"
+                        FontAttributes="Bold"
+                        TextColor="White"
+                        LineBreakMode="TailTruncation">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label" Binding="{Binding IsCompleted}" Value="True">
+                                <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                <Setter Property="TextColor" Value="#A0A0B0"/>
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+
+                    <HorizontalStackLayout Spacing="7">
+
+                        <Image
+                            Source="calendar.png"
+                            WidthRequest="17"
+                            HeightRequest="17"
+                            VerticalOptions="Center"/>
+
+                        <Label
+                            Text="{Binding DueDate, StringFormat='{0:dd MMMM yyyy}'}"
+                            FontSize="14"
+                            TextColor="#D0D0DA"
+                            VerticalOptions="Center"/>
+
+                    </HorizontalStackLayout>
+
+                </VerticalStackLayout>
+
+
+                <Border
+                    Grid.Column="2"
+                    InputTransparent="True"
+                    BackgroundColor="{Binding Category.BackgroundColor}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 25"
+                    Padding="15,10"
+                    VerticalOptions="Center">
+                    <Border.Stroke>
+                        <SolidColorBrush Color="{Binding BindingContext.Category.Color,
+                                Source={x:Reference TaskCardRoot},
+                                FallbackValue=Transparent,
+                                TargetNullValue=Transparent}"/>
+                    </Border.Stroke>
+
+                    <HorizontalStackLayout Spacing="10">
+
+                        <Image
+                            Source="{Binding Category.IconSource}"
+                            WidthRequest="20"
+                            HeightRequest="20"
+                            VerticalOptions="Center"/>
+
+                        <Label
+                            Text="{Binding Category.Name}"
+                            FontSize="14"
+                            TextColor="White"
+                            VerticalOptions="Center"/>
+
+                    </HorizontalStackLayout>
+
+                </Border>
+
+
+                <HorizontalStackLayout
+                    Grid.Column="3"
+                    InputTransparent="False"
+                    Spacing="10"
+                    VerticalOptions="Center">
+
+
+                    <ImageButton
+                        Command="{Binding EditCommand, Source={x:Reference TaskCardRoot}}"
+                        CommandParameter="{Binding .}"
+                        Source="edit.png"
+                        BackgroundColor="#292A3A"
+                        BorderWidth="0"
+                        CornerRadius="12"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        MinimumWidthRequest="0"
+                        MinimumHeightRequest="0"
+                        Padding="10"
+                        />
+
+
+                    <ImageButton
+                        Command="{Binding DeleteCommand, Source={x:Reference TaskCardRoot}}"
+                        CommandParameter="{Binding .}"
+                        Source="delete.png"
+                        BackgroundColor="#292A3A"
+                        BorderWidth="0"
+                        CornerRadius="12"
+                        WidthRequest="42"
+                        HeightRequest="42"
+                        MinimumWidthRequest="0"
+                        MinimumHeightRequest="0"
+                        Padding="10"
+                        />
+
+                </HorizontalStackLayout>
+
+            </Grid>
         </Grid>
 
     </Border>

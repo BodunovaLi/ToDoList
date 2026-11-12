@@ -55,7 +55,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         }
     }
 
-    // Вспомогательный метод создания основной задачи
+
     private async Task<TaskItem> CreateTestTaskAsync(
         string name = "Тестовая задача")
     {
@@ -69,7 +69,7 @@ public class SubtaskServiceTests : IAsyncLifetime
 
     #region GetSubtasksByTaskIdAsync
 
-    // 1. Получение существующих подзадач
+
     [Fact]
     public async Task GetSubtasksByTaskIdAsync_ExistingSubtasks_ShouldReturnList()
     {
@@ -86,7 +86,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Contains(subtasks, s => s.Name == "Вторая");
     }
 
-    // 2. Задача без подзадач
+
     [Fact]
     public async Task GetSubtasksByTaskIdAsync_NoSubtasks_ShouldReturnEmptyList()
     {
@@ -98,7 +98,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Empty(subtasks);
     }
 
-    // 3. Подзадачи разных задач не смешиваются
+
     [Fact]
     public async Task GetSubtasksByTaskIdAsync_DifferentTasks_ShouldReturnOnlyOwnSubtasks()
     {
@@ -116,7 +116,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Equal(firstTask.Id, subtasks[0].TaskId);
     }
 
-    // 4. Некорректный ID
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -126,7 +126,7 @@ public class SubtaskServiceTests : IAsyncLifetime
             () => _subtaskService.GetSubtasksByTaskIdAsync(id));
     }
 
-    // 5. Основная задача не существует
+
     [Fact]
     public async Task GetSubtasksByTaskIdAsync_NonExistingTask_ShouldThrow()
     {
@@ -138,7 +138,7 @@ public class SubtaskServiceTests : IAsyncLifetime
 
     #region CreateSubtaskAsync
 
-    // 6. Успешное создание подзадачи
+
     [Fact]
     public async Task CreateSubtaskAsync_ValidData_ShouldCreateSubtask()
     {
@@ -156,7 +156,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Equal(task.Id, saved.TaskId);
     }
 
-    // 7. Новая подзадача не выполнена
+
     [Fact]
     public async Task CreateSubtaskAsync_ShouldBeNotCompletedByDefault()
     {
@@ -168,7 +168,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.False(subtask.IsCompleted);
     }
 
-    // 8. Обрезка пробелов
+
     [Fact]
     public async Task CreateSubtaskAsync_NameWithSpaces_ShouldTrimName()
     {
@@ -181,7 +181,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Equal("Купить хлеб", subtask.Name);
     }
 
-    // 9. Некорректный ID основной задачи
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -191,7 +191,7 @@ public class SubtaskServiceTests : IAsyncLifetime
             () => _subtaskService.CreateSubtaskAsync(id, "Подзадача"));
     }
 
-    // 10. Основная задача не существует
+
     [Fact]
     public async Task CreateSubtaskAsync_NonExistingTask_ShouldThrow()
     {
@@ -199,7 +199,7 @@ public class SubtaskServiceTests : IAsyncLifetime
             () => _subtaskService.CreateSubtaskAsync(99999, "Подзадача"));
     }
 
-    // 11. Пустое название
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -221,7 +221,7 @@ public class SubtaskServiceTests : IAsyncLifetime
 
     #region UpdateSubtaskAsync
 
-    // 12. Успешное изменение названия
+
     [Fact]
     public async Task UpdateSubtaskAsync_ValidName_ShouldUpdateName()
     {
@@ -240,7 +240,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Equal("Новое", saved.Name);
     }
 
-    // 13. Обрезка пробелов
+
     [Fact]
     public async Task UpdateSubtaskAsync_NameWithSpaces_ShouldTrimName()
     {
@@ -256,7 +256,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Equal("Новое", updated.Name);
     }
 
-    // 14. Сохранение ID, TaskId и статуса
+
     [Fact]
     public async Task UpdateSubtaskAsync_ShouldPreserveOtherProperties()
     {
@@ -280,7 +280,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.True(saved.IsCompleted);
     }
 
-    // 15. Некорректный ID
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -290,7 +290,7 @@ public class SubtaskServiceTests : IAsyncLifetime
             () => _subtaskService.UpdateSubtaskAsync(id, "Новое"));
     }
 
-    // 16. Подзадача не существует
+
     [Fact]
     public async Task UpdateSubtaskAsync_NonExistingSubtask_ShouldThrow()
     {
@@ -298,7 +298,7 @@ public class SubtaskServiceTests : IAsyncLifetime
             () => _subtaskService.UpdateSubtaskAsync(99999, "Новое"));
     }
 
-    // 17. Пустое название
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
@@ -324,7 +324,7 @@ public class SubtaskServiceTests : IAsyncLifetime
 
     #region SetSubtaskCompletedAsync
 
-    // 18. Отметка выполнения
+
     [Fact]
     public async Task SetSubtaskCompletedAsync_True_ShouldMarkCompleted()
     {
@@ -343,7 +343,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.True(saved.IsCompleted);
     }
 
-    // 19. Отмена выполнения
+
     [Fact]
     public async Task SetSubtaskCompletedAsync_False_ShouldMarkNotCompleted()
     {
@@ -365,7 +365,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.False(saved.IsCompleted);
     }
 
-    // 20. Остальные свойства не изменяются
+
     [Fact]
     public async Task SetSubtaskCompletedAsync_ShouldPreserveOtherProperties()
     {
@@ -386,7 +386,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Equal("Подзадача", saved.Name);
     }
 
-    // 21. Некорректный ID
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -396,7 +396,7 @@ public class SubtaskServiceTests : IAsyncLifetime
             () => _subtaskService.SetSubtaskCompletedAsync(id, true));
     }
 
-    // 22. Подзадача не существует
+
     [Fact]
     public async Task SetSubtaskCompletedAsync_NonExistingSubtask_ShouldThrow()
     {
@@ -408,7 +408,7 @@ public class SubtaskServiceTests : IAsyncLifetime
 
     #region DeleteSubtaskAsync
 
-    // 23. Успешное удаление
+
     [Fact]
     public async Task DeleteSubtaskAsync_ExistingSubtask_ShouldDelete()
     {
@@ -427,7 +427,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Null(saved);
     }
 
-    // 24. Остальные подзадачи сохраняются
+
     [Fact]
     public async Task DeleteSubtaskAsync_ShouldPreserveOtherSubtasks()
     {
@@ -448,7 +448,7 @@ public class SubtaskServiceTests : IAsyncLifetime
         Assert.Equal(second.Id, subtasks[0].Id);
     }
 
-    // 25. Некорректный ID
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -458,7 +458,7 @@ public class SubtaskServiceTests : IAsyncLifetime
             () => _subtaskService.DeleteSubtaskAsync(id));
     }
 
-    // 26. Подзадача не существует
+
     [Fact]
     public async Task DeleteSubtaskAsync_NonExistingSubtask_ShouldThrow()
     {

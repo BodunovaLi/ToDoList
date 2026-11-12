@@ -2,19 +2,21 @@ namespace ToDoList.Views.Components;
 
 public partial class SubtaskCardView : ContentView
 {
-    public event EventHandler<ToDoList.Models.Subtask>? EditRequested;
-    public event EventHandler<ToDoList.Models.Subtask>? DeleteRequested;
+    public static readonly BindableProperty EditCommandProperty = BindableProperty.Create(
+        nameof(EditCommand), typeof(System.Windows.Input.ICommand), typeof(SubtaskCardView));
+    public static readonly BindableProperty DeleteCommandProperty = BindableProperty.Create(
+        nameof(DeleteCommand), typeof(System.Windows.Input.ICommand), typeof(SubtaskCardView));
 
-    private void OnEditClicked(object? sender, EventArgs e)
+    public System.Windows.Input.ICommand? EditCommand
     {
-        if (BindingContext is ToDoList.Models.Subtask subtask)
-            EditRequested?.Invoke(this, subtask);
+        get => (System.Windows.Input.ICommand?)GetValue(EditCommandProperty);
+        set => SetValue(EditCommandProperty, value);
     }
 
-    private void OnDeleteClicked(object? sender, EventArgs e)
+    public System.Windows.Input.ICommand? DeleteCommand
     {
-        if (BindingContext is ToDoList.Models.Subtask subtask)
-            DeleteRequested?.Invoke(this, subtask);
+        get => (System.Windows.Input.ICommand?)GetValue(DeleteCommandProperty);
+        set => SetValue(DeleteCommandProperty, value);
     }
 	public SubtaskCardView()
 	{

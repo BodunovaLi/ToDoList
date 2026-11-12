@@ -9,6 +9,7 @@
             Routing.RegisterRoute(
                             "task-editor",
                             typeof(ToDoList.Views.TaskEditorPage));
+            Routing.RegisterRoute("task-details", typeof(ToDoList.Views.TaskDetailsPage));
 
         }
 
